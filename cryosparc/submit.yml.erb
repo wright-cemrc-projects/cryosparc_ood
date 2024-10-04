@@ -1,0 +1,13 @@
+---
+batch_connect:
+  template: vnc
+
+script:
+  native:
+    - "-N"
+    - "1"
+    - "-n"
+    - "40"
+    - "--mem=256G"
+    - "--gres=gpu:1"
+    - "--time=<%= time %>:00:00"

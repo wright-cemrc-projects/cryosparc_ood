@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+
+# Clean the environment
+module purge
+
+# Set working directory to home directory
+cd "${HOME}"
+
+
+
+# Define basic variables
+master_cmd=cryosparcm
+worker_cmd=cryosparcw
+# Figure out the port based on uid
+IMUID=$(getent passwd $UID | awk -F: '{print $3}')
+if [ $IMUID -gt 65535 ]; then
+        echo UID $IMUID too big
+        MUID=$(echo "$IMUID % 65535" | bc)
+        # add the mod to the above result so we don't have clashes
+      export MUID=$(expr $MUID + $(expr $IMUID / $MUID))
+else
+        export MUID=$IMUID
+fi
+if [ $IMUID -lt 2000 ]; then
+       export MUID=$(expr $IMUID \* 2 \+ 60000)
+fi
+master_port=$MUID
+
+ssd_path="/scratch/$USER/cryosparc_scratch"
+
+module add firefox/110.0
+export PATH=$PATH:/home/users/$USER/cryosparc/$MUID/cryosparc_master/bin
+export PATH=$PATH:/home/users/$USER/cryosparc/$MUID/cryosparc_worker/bin
+
+
+
+#
+# Launch Xfce Window Manager and Panel
+#
+
+(
+  export SEND_256_COLORS_TO_REMOTE=1
+  export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+  export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+  export XDG_CACHE_HOME="$(mktemp -d)"
+  module restore
+  set -x
+  xfwm4 --compositor=off --daemon --sm-client-disable
+  xsetroot -solid "#D3D3D3"
+  xfsettingsd --sm-client-disable
+  xfce4-panel --sm-client-disable
+) &
+
+
+parse_slurm_nodes () 
+{
+	## Parse slurm node list
+#	node_list=($(scontrol show hostnames $SLURM_NODELIST))
+
+	master_bindir=$(dirname $(which cryosparcm))
+	worker_bindir=$(dirname $(which cryosparcw))
+
+
+	## This is the first/Master node
+	#master_node=${node_list[0]}	
+	master_node="$(hostname)"	
+
+}
+
+
+start_master () 
+{
+	
+	# remove the old unix sock lock
+
+	if ls /tmp/cryosparc-*sock 1> /dev/null 2>&1; then
+		lockfiles=`ls /tmp/cryosparc-*sock`
+
+		if [[ $lockfiles != *"cannot access"* ]];
+		then
+
+			for i in $lockfiles
+			do
+				owner=`stat -c %U $i`
+				if [[ $owner == $USER ]]
+				then
+					echo "  Removing file $i"
+					rm $i
+					rm /tmp/mongodb*sock
+				else
+					echo "  There is a $i lockfile left by $owner from a previous session. "
+					echo "  CryoSparc cannot obtain the database socket because this file can not be delete by you. "
+					echo "  Please ask $owner to delete $i on $master_node ."
+					echo "  Unfortunately, I have to quit."
+					exit 1
+				fi
+			done
+		fi
+	else
+		echo "  No lock founded. "
+	fi
+
+	echo "  Starting the Cryosparc Master on $master_node. "
+#	$master_cmd changeport $master_port -y
+#	$master_cmd fixdbport
+	$master_cmd restart
+	sleep 15
+
+	# check if master web is alive
+	nc -z -v -w5 $master_node $master_port
+
+	if [[ $? -ne 0 ]];
+	then
+		echo "  Master web $master_port is not available, exit. "
+		exit 1;
+	fi
+
+	echo "  Cryosparc Master is started on $master_node:$master_port"
+
+}
+
+cleanup_old_workers () 
+{
+	current_num_workers=$(cryosparcm cli "get_worker_nodes().__len__()")
+	
+	echo "  There were $current_num_workers workers connected previously, cleaning"
+
+	worker_list=" "
+	
+	for (( i=0; i<$current_num_workers; i++))
+	do
+		old_node=$(cryosparcm cli "get_worker_nodes()[$i][\"name\"]")
+		worker_list="$worker_list $old_node"
+	done
+
+	echo "  The previous workers are: $worker_list. "
+
+	for w in $worker_list
+	do
+#		for node in ${node_list[@]}
+#		do
+			
+#			if [[ $w != $node ]]; 
+#			then
+#				echo "  Removing old node $w from cluster."
+#
+#				cryosparcm cli "remove_scheduler_target_node(\"$w\")"
+#			fi
+				cryosparcm cli "remove_scheduler_target_node(\"$w\")"
+#		done
+	done
+
+}
+
+prepare_ssd_scratch ()
+{
+	#srun "mkdir -p $ssd_path"
+	mkdir -p "$ssd_path"
+}
+
+connect_workers ()
+{
+	echo "  Attempt to connect worker(s) ${node_list[@]} ."
+
+	#for node in ${node_list[@]}
+    	#do
+	#	if [[ $node != $master_node ]];
+	#then
+	#		printf "  Connecting worker on %s \n" $node
+	
+	#		ssh $node "cryosparcw connect --worker $node --master $master_node --port $master_port --ssdpath $ssd_path"
+	#		sleep 5
+	#	fi
+	#done
+
+	# confirm master is also a worker
+	cryosparcw connect --worker $master_node --master $master_node --port $master_port --ssdpath $ssd_path
+
+}
+
+remove_workers ()
+{
+	echo "  Attempt to remove worker(s) ${node_list[@]} ."
+
+	for node in ${node_list[@]}
+    	do
+		if [[ $node != $master_node ]];
+		then
+			printf "  Removing worker  %s \n" $node
+	
+			$master_cmd cli "remove_scheduler_target_node(\"$node\")"
+			sleep 5
+		fi
+	done
+}
+
+shutdown_master () 
+{	
+	echo "  Shutting down Cryosparc Master. "
+	cryosparcm stop
+}
+
+start_cluster () 
+{
+	
+	parse_slurm_nodes
+
+	start_master
+
+	cleanup_old_workers
+
+	prepare_ssd_scratch
+
+	connect_workers
+
+}
+
+cleanup () 
+{
+	echo "  Job is ending, cleaning up. "
+
+#	remove_workers
+
+	shutdown_master
+
+	echo "  Removing sock lock file. "
+
+	srun rm /tmp/cryosparc*sock
+	rm /tmp/cryosparc*sock
+	rm /tmp/mongodb*sock
+
+}
+
+
+
+
+set -x
+trap 'cleanup' SIGINT SIGQUIT SIGTERM SIGKILL
+start_cluster
+firefox --kiosk http://localhost:$MUID/ 2>/dev/null &
+
+while true; do
+
+TIME_LEFT=$(squeue -j $SLURM_JOBID -O timeleft --noheader | awk -F ":" '{print $1 * 60 + $2}')
+
+if [ $TIME_LEFT -lt 180 ]; then
+break
+fi
+sleep 60
+done
+
+cleanup
+
