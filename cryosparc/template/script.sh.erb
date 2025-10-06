@@ -11,19 +11,28 @@ cd "${HOME}"
 # Define basic variables
 master_cmd=cryosparcm
 worker_cmd=cryosparcw
-# Figure out the port based on uid
-IMUID=$(getent passwd $UID | awk -F: '{print $3}')
-if [ $IMUID -gt 65535 ]; then
-        echo UID $IMUID too big
-        MUID=$(echo "$IMUID % 65535" | bc)
-        # add the mod to the above result so we don't have clashes
-      export MUID=$(expr $MUID + $(expr $IMUID / $MUID))
-else
-        export MUID=$IMUID
-fi
-if [ $IMUID -lt 2000 ]; then
-       export MUID=$(expr $IMUID \* 2 \+ 60000)
-fi
+
+# Figure out port based on username
+hash=$(echo -n "$username" | cksum | awk '{print $1}')
+
+min=40000
+max=41000
+range=$((max - min + 1))
+MUID=$(( (hash % range) + min ))
+
+## [OLD] Figure out the port based on uid
+#IMUID=$(getent passwd $UID | awk -F: '{print $3}')
+#if [ $IMUID -gt 65535 ]; then
+#        echo UID $IMUID too big
+#        MUID=$(echo "$IMUID % 65535" | bc)
+#        # add the mod to the above result so we don't have clashes
+#      export MUID=$(expr $MUID + $(expr $IMUID / $MUID))
+#else
+#        export MUID=$IMUID
+#fi
+#if [ $IMUID -lt 2000 ]; then
+#       export MUID=$(expr $IMUID \* 2 \+ 60000)
+#fi
 master_port=$MUID
 
 ssd_path="/scratch/$USER/cryosparc_scratch"

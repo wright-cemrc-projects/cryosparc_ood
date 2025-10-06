@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-export CSPARCSRC=/path/to/dir/with/cryosparc/source/tarballs/cryosparc/
-export CCACHE=/scratch/cryosparc/${USER}
-export CUDA=/software/cuda/11.6
+export CSPARCSRC=/mnt/hpc_users/share/resources/cryosparc/
+export CCACHE=/mnt/scratch/cryosparc/${USER}
+export CUDA=/user/local/cuda
 export UEMAIL=$USER
 
 if [ "$UEMAIL" == "" ]; then
@@ -18,20 +18,19 @@ if [ "$LICENSE_ID" == "" ]; then
 	exit
 fi
 
-IMUID=$(getent passwd $UID | awk -F: '{print $3}')
-if [ $IMUID -gt 65535 ]; then 
-	echo UID $IMUID too big
-	MUID=$(echo "$IMUID % 65535" | bc)
-	# add the mod to the above result so we don't have clashes
-	MUID=$(expr $MUID + $(expr $IMUID / $MUID))
-else
-	MUID=$IMUID
-fi
-if [ $IMUID -lt 2000 ]; then
-	MUID=$(expr $IMUID \* 2 \+ 60000)
-fi
+hash=$(echo -n "$username" | cksum | awk '{print $1}')
+
+#min=2000
+#max=65535
+min=40000
+max=41000
+range=$((max - min + 1))
+MUID=$(( (hash % range) + min ))
+
+echo "$username -> $MUID"
 echo port is $MUID 
-export CHOME=/home/${USER}/cryosparc/$MUID
+
+export CHOME=/mnt/hpc_users/home/${USER}/cryosparc/$MUID
 
 
 mkdir -p ${CHOME}
@@ -40,7 +39,7 @@ echo please waiting extrating cryosparc...
 tar xzf ${CSPARCSRC}/cryosparc_master.tar.gz
 tar xzf ${CSPARCSRC}/cryosparc_worker.tar.gz
 
-UEMAIL="${USER}@[university].edu"
+UEMAIL="${USER}"
 
 cd cryosparc_master
 ./install.sh --standalone --license $LICENSE_ID --worker_path ${CHOME}/cryosparc_worker --ssdpath ${CCACHE} --initial_email "${UEMAIL}" --initial_password "${USER}123" --initial_username "${USER}" --initial_firstname "${USER}" --initial_lastname "${USER}" --port ${MUID}
@@ -49,4 +48,4 @@ export PATH=$PATH:${CHOME}/cryosparc_master/bin
 
 cryosparcm stop
 
-echo ./install.sh --standalone --license $LICENSE_ID --worker_path ${CHOME}/cryosparc_worker --cudapath /usr/local/cuda-10.0 --ssdpath /u1/cryo/${USER} --initial_email "${UEMAIL}" --initial_password "${USER}123" --initial_username "${USER}" --initial_firstname "${USER}" --initial_lastname "${USER}" --port ${MUID}
+echo ./install.sh --standalone --license $LICENSE_ID --worker_path ${CHOME}/cryosparc_worker --cudapath ${CUDA} --ssdpath ${CCACHE} --initial_email "${UEMAIL}" --initial_password "${USER}123" --initial_username "${USER}" --initial_firstname "${USER}" --initial_lastname "${USER}" --port ${MUID}
