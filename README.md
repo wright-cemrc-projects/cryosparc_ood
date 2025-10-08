@@ -21,8 +21,14 @@ provide the SLURM submission scripts.
 Change to the directory containing the `r5000` queue submission scripts and do the cluster connect command:
 
 ```
-cd slurm
+cd slurm-r5000
 cryosparcm cluster connect
 ```
 
 At this point, you should be able to submit jobs to a SLURM queue. Communications are needed between the worker in SLURM and the CryoSPARC master API to be able for the information to pass back to the master during the job run. (IN-PROGRESS)
+
+The cryosparc_worker/config.sh also needs this line:
+
+export CRYOSPARC_SSD_PATH="/mnt/scratch/cryosparc-{$USER}
+
+Each host will need to have /mnt/scratch be writeable by cluster users.
