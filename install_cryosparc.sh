@@ -2,7 +2,7 @@
 
 
 export CSPARCSRC=/mnt/hpc_users/share/resources/cryosparc/
-export CCACHE=/mnt/scratch/cryosparc/${USER}
+export CCACHE=/mnt/scratch/cryosparc-${USER}
 export CUDA=/user/local/cuda
 export UEMAIL=$USER
 
@@ -18,7 +18,7 @@ if [ "$LICENSE_ID" == "" ]; then
 	exit
 fi
 
-hash=$(echo -n "$username" | cksum | awk '{print $1}')
+hash=$(echo -n "$USER" | cksum | awk '{print $1}')
 
 #min=2000
 #max=65535

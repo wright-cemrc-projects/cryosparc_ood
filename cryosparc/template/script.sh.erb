@@ -13,7 +13,7 @@ master_cmd=cryosparcm
 worker_cmd=cryosparcw
 
 # Figure out port based on username
-hash=$(echo -n "$username" | cksum | awk '{print $1}')
+hash=$(echo -n "$USER" | cksum | awk '{print $1}')
 
 min=40000
 max=41000
