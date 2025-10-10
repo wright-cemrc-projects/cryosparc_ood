@@ -6,4 +6,6 @@ role: batch_connect
 description: |
         Launch a Cryosparc session on a remote desktop
 
+        Please make sure that you have already registered to use CryoSPARC here: https://explore.wisc.edu/LP=3412
+
         **Please be patient, the app takes a couple minutes to fully start after the vnc session has started.**

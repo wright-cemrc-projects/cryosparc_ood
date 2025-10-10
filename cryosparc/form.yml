@@ -1,11 +1,4 @@
 ---
-<%
-required_dir = File.join(ENV['HOME'], 'cryosparc')
-unless File.directory?(required_dir)
-  raise "Required directory #{required_dir} not found. Ask your HPC administrator for how to get started using CryoSPARC on the HPC cluster at https://explore.wisc.edu/LP=3412"
-end
-%>
-
 cluster: [cluster]
 
 attributes:
@@ -20,7 +13,7 @@ attributes:
     widget: "number_field"
     required: "True"
     help: "Enter time in mins, current max of 96 hours (4 days)."
-    value: "1"
+    value: "12"
     min: 1
     max: 96
     step: 1

@@ -35,11 +35,11 @@ MUID=$(( (hash % range) + min ))
 #fi
 master_port=$MUID
 
-ssd_path="/scratch/$USER/cryosparc_scratch"
+ssd_path="/mnt/scratch/cryosparc-$USER"
 
 module add firefox/110.0
-export PATH=$PATH:/home/users/$USER/cryosparc/$MUID/cryosparc_master/bin
-export PATH=$PATH:/home/users/$USER/cryosparc/$MUID/cryosparc_worker/bin
+export PATH=$PATH:/mnt/hpc_users/home/$USER/cryosparc/$MUID/cryosparc_master/bin
+export PATH=$PATH:/mnt/hpc_users/home/$USER/cryosparc/$MUID/cryosparc_worker/bin
 
 
 
@@ -96,12 +96,12 @@ start_master ()
 					echo "  Removing file $i"
 					rm $i
 					rm /tmp/mongodb*sock
-				else
-					echo "  There is a $i lockfile left by $owner from a previous session. "
-					echo "  CryoSparc cannot obtain the database socket because this file can not be delete by you. "
-					echo "  Please ask $owner to delete $i on $master_node ."
-					echo "  Unfortunately, I have to quit."
-					exit 1
+#				else
+#					echo "  There is a $i lockfile left by $owner from a previous session. "
+#					echo "  CryoSparc cannot obtain the database socket because this file can not be delete by you. "
+#					echo "  Please ask $owner to delete $i on $master_node ."
+#					echo "  Unfortunately, I have to quit."
+#					exit 1
 				fi
 			done
 		fi
