@@ -4,8 +4,8 @@ cluster: [cluster]
 attributes:
   desktop: "xfce"
   bc_vnc_idle: 0
-  bc_vnc_resolution:
-    required: true
+  #  bc_vnc_resolution:
+  #  required: true
   node_type: null    
 
   time:
@@ -34,5 +34,5 @@ form:
   - desktop
   - time
 #  - additional_modules
-  - bc_vnc_resolution
+#  - bc_vnc_resolution
   - bc_email_on_started

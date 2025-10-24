@@ -47,19 +47,14 @@ export PATH=$PATH:/mnt/hpc_users/home/$USER/cryosparc/$MUID/cryosparc_worker/bin
 # Launch Xfce Window Manager and Panel
 #
 
-(
-  export SEND_256_COLORS_TO_REMOTE=1
-  export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
-  export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
-  export XDG_CACHE_HOME="$(mktemp -d)"
-  module restore
-  set -x
-  xfwm4 --compositor=off --daemon --sm-client-disable
-  xsetroot -solid "#D3D3D3"
-  xfsettingsd --sm-client-disable
-  xfce4-panel --sm-client-disable
-) &
-
+export SEND_256_COLORS_TO_REMOTE=1
+export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+export XDG_CACHE_HOME="$(mktemp -d)"
+  #xfwm4 --compositor=off --daemon --sm-client-disable
+xfwm4 --compositor=off --sm-client-disable &
+xsetroot -solid "#D3D3D3"
+#xsettingsd --sm-client-disable &
 
 parse_slurm_nodes () 
 {
@@ -113,7 +108,7 @@ start_master ()
 #	$master_cmd changeport $master_port -y
 #	$master_cmd fixdbport
 	$master_cmd restart
-	sleep 15
+	sleep 8
 
 	# check if master web is alive
 	nc -z -v -w5 $master_node $master_port
@@ -246,7 +241,14 @@ cleanup ()
 set -x
 trap 'cleanup' SIGINT SIGQUIT SIGTERM SIGKILL
 start_cluster
-firefox --kiosk http://localhost:$MUID/ 2>/dev/null &
+
+firefox  --width 1600 --height 1200 --kiosk http://localhost:$MUID/ 2>/dev/null &
+
+sleep 1 
+# Try to pin the firefox window on top
+# xdotool search --sync --onlyvisible --class 'Firefox' windowactivate windowpin
+
+
 
 while true; do
 
