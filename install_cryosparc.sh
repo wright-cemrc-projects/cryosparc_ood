@@ -48,7 +48,7 @@ export PATH=$PATH:${CHOME}/cryosparc_master/bin
 
 # Setup queues and startup pages
 
-template/install.sh "${USER}" "${MUID}"
+./template/install.sh "${USER}" "${MUID}"
 
 # Finish the installation
 
