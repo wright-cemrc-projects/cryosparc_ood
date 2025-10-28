@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export CSPARCSRC=/mnt/hpc_users/share/resources/cryosparc/
 export CCACHE=/mnt/scratch/cryosparc-${USER}
 export CUDA=/user/local/cuda
@@ -48,7 +48,7 @@ export PATH=$PATH:${CHOME}/cryosparc_master/bin
 
 # Setup queues and startup pages
 
-./templates/install.sh "${USER}" "${MUID}"
+${SCRIPT_DIR}/templates/install.sh "${USER}" "${MUID}"
 
 # Finish the installation
 
