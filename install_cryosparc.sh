@@ -48,10 +48,15 @@ export PATH=$PATH:${CHOME}/cryosparc_master/bin
 
 # Setup queues and startup pages
 
-./template/install.sh "${USER}" "${MUID}"
+./templates/install.sh "${USER}" "${MUID}"
 
 # Finish the installation
 
 cryosparcm stop
 
 echo ./install.sh --standalone --license $LICENSE_ID --worker_path ${CHOME}/cryosparc_worker --cudapath ${CUDA} --ssdpath ${CCACHE} --initial_email "${UEMAIL}" --initial_password "${USER}123" --initial_username "${USER}" --initial_firstname "${USER}" --initial_lastname "${USER}" --port ${MUID}
+
+# Get the worker setup correctly to have an SSD path
+WORKER_CONFIG_FILE=${CHOME}/cryosparc_worker/config.sh
+SSD_WORKER_SETTING="export CRYOSPARC_SSD_PATH=\"${CCACHE}\""
+echo ${SSD_WORKER_SETTING} >> ${WORKER_CONFIG_FILE}
