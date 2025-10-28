@@ -1,9 +1,0 @@
-{
-    "name": "{{QUEUE}}",
-    "worker_bin_path": "{{CHOME}}/cryosparc_worker/bin/cryosparcw",
-    "send_cmd_tpl": "{{ command }}",
-    "qsub_cmd_tpl": "/bin/sbatch {{ script_path_abs }}",
-    "qstat_cmd_tpl": "/bin/squeue -j {{ cluster_job_id }}",
-    "qdel_cmd_tpl": "/bin/scancel {{ cluster_job_id }}",
-    "qinfo_cmd_tpl": "/bin/sinfo"
-}
