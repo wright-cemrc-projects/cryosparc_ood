@@ -23,6 +23,7 @@ for SQ in "${SLURM_QUEUES[@]}"; do
   cp -r queues/slurm_template ${CHOME}/queues/${SQ}
   sed -i "s|{{CHOME}}|${CHOME}|g" ${CHOME}/queues/${SQ}/cluster_info.json 
   sed -i "s|{{QUEUE}}|${SQ}|g" ${CHOME}/queues/${SQ}/cluster_info.json 
+  sed -i "s|{{QUEUE}}|${SQ}|g" ${CHOME}/queues/${SQ}/cluster_script.sh
 done
 
 # Tell CryoSPARC about these configs; CryoSPARC must be running
