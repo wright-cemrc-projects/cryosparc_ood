@@ -54,6 +54,7 @@ export XDG_CACHE_HOME="$(mktemp -d)"
   #xfwm4 --compositor=off --daemon --sm-client-disable
 xfwm4 --compositor=off --sm-client-disable &
 xsetroot -solid "#D3D3D3"
+feh --bg-center loading_icon.png
 #xsettingsd --sm-client-disable &
 
 parse_slurm_nodes () 
@@ -101,14 +102,14 @@ start_master ()
 			done
 		fi
 	else
-		echo "  No lock founded. "
+		echo "  No lock found. "
 	fi
 
 	echo "  Starting the Cryosparc Master on $master_node. "
 #	$master_cmd changeport $master_port -y
 #	$master_cmd fixdbport
 	$master_cmd restart
-	sleep 8
+	sleep 6
 
 	# check if master web is alive
 	nc -z -v -w5 $master_node $master_port
@@ -121,6 +122,8 @@ start_master ()
 
 	echo "  Cryosparc Master is started on $master_node:$master_port"
 
+	echo "  Clearing queues"
+	cryosparcm cli "remove_scheduler_lane('default')"
 }
 
 cleanup_old_workers () 
@@ -215,7 +218,8 @@ start_cluster ()
 
 	prepare_ssd_scratch
 
-	connect_workers
+	# Disabled for our cluster, cannot make local OpenSSH call here.
+	# connect_workers
 
 }
 
@@ -240,15 +244,19 @@ cleanup ()
 
 set -x
 trap 'cleanup' SIGINT SIGQUIT SIGTERM SIGKILL
+
+export CHOME=/mnt/hpc_users/home/${USER}/cryosparc/${MUID}
+
+# Show a nicer loading screen while processes are starting
+firefox  --width 1600 --height 1200 --kiosk ${CHOME}/pages/loading_screen.html &
+FIREFOX_PID=$1
+
 start_cluster
 
-firefox  --width 1600 --height 1200 --kiosk http://localhost:$MUID/ 2>/dev/null &
-
 sleep 1 
-# Try to pin the firefox window on top
-# xdotool search --sync --onlyvisible --class 'Firefox' windowactivate windowpin
 
-
+# Switchover to CryoSPARC
+firefox --width 1600 --height 1200 --kiosk --new-window http://localhost:$MUID/ 
 
 while true; do
 

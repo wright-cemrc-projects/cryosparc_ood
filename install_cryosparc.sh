@@ -35,7 +35,7 @@ export CHOME=/mnt/hpc_users/home/${USER}/cryosparc/$MUID
 
 mkdir -p ${CHOME}
 cd ${CHOME}
-echo please waiting extrating cryosparc...
+echo please waiting extracting cryosparc...
 tar xzf ${CSPARCSRC}/cryosparc_master.tar.gz
 tar xzf ${CSPARCSRC}/cryosparc_worker.tar.gz
 
@@ -45,6 +45,12 @@ cd cryosparc_master
 ./install.sh --standalone --license $LICENSE_ID --worker_path ${CHOME}/cryosparc_worker --ssdpath ${CCACHE} --initial_email "${UEMAIL}" --initial_password "${USER}123" --initial_username "${USER}" --initial_firstname "${USER}" --initial_lastname "${USER}" --port ${MUID}
 
 export PATH=$PATH:${CHOME}/cryosparc_master/bin
+
+# Setup queues and startup pages
+
+template/install.sh "${USER}" "${MUID}"
+
+# Finish the installation
 
 cryosparcm stop
 
